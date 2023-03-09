@@ -1,8 +1,8 @@
 package com.example.demo.service;
 
-import com.example.demo.connection.ConnectionUsers;
 import com.example.demo.model.Province;
 import com.example.demo.model.User;
+import jdk.vm.ci.code.site.Call;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -11,17 +11,17 @@ import java.util.List;
 import static com.example.demo.connection.ConnectionUsers.getConnection;
 
 public class UserService implements IUser {
-    private final String SELECT_ALL = "select * from users";
-    private final String SELECT_BY_PROVINCE_ID = "select * from province where province_id = ?";
+    public static final String CALL_GET_ALL_USERS = "{CALL get_all_users()}";
+    public static final String CALL_GET_PROVINCE = "{CALL get_province(?)}";
 
 
     @Override
     public List<User> selectAllUser() {
         List<User> users = new ArrayList<>();
         try (Connection conn = getConnection();
-             PreparedStatement stmt = conn.prepareStatement(SELECT_ALL);
+             CallableStatement callable = conn.prepareCall(CALL_GET_ALL_USERS);
         ) {
-            ResultSet resultSet = stmt.executeQuery();
+            ResultSet resultSet = callable.executeQuery();
             while (resultSet.next()) {
                 int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
@@ -39,7 +39,8 @@ public class UserService implements IUser {
     public Province selectProvince(int province_id) {
         Province province = null;
         try (Connection conn = getConnection();
-             PreparedStatement statement = conn.prepareStatement(SELECT_BY_PROVINCE_ID);) {
+             CallableStatement statement = conn.prepareCall(CALL_GET_PROVINCE)
+        ) {
             System.out.println(statement);
             statement.setInt(1, province_id);
             ResultSet resultSet = statement.executeQuery();
